@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Dashboard – HomeService</title>
+  <link rel="stylesheet" href="src/styles.css">
+  <style>
+    .dashboard-content { padding: 32px; }
+    .bookings-list { display: flex; flex-direction: column; gap: 16px; }
+    .booking-item {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.2s;
+    }
+    .booking-item:hover { box-shadow: var(--shadow-md); }
+    .booking-icon { width: 52px; height: 52px; border-radius: var(--radius); background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+    .booking-info { flex: 1; min-width: 0; }
+    .booking-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    @media (max-width: 600px) { .booking-item { flex-direction: column; align-items: flex-start; } .booking-actions { width: 100%; } }
+  </style>
+</head>
+<body>
+
+<div class="dashboard">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">Home<span>Service</span></div>
+      <div style="font-size:0.75rem;color:#64748b;margin-top:4px;">User Dashboard</div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-nav-item active" onclick="showSection('my-bookings', this)">📋 My Bookings</button>
+      <button class="sidebar-nav-item" onclick="showSection('profile', this)">👤 My Profile</button>
+      <div class="sidebar-section-label">Quick Actions</div>
+      <a href="services.html" class="sidebar-nav-item">🔍 Browse Services</a>
+      <button class="sidebar-nav-item" onclick="logout()" style="margin-top:auto;color:#ef4444;">🚪 Logout</button>
+    </nav>
+  </div>
+
+  <!-- MAIN -->
+  <div class="dashboard-main">
+    <div class="dashboard-header">
+      <h1 id="page-title">My Bookings</h1>
+      <a href="services.html" class="btn btn-accent btn-sm">+ Book New Service</a>
+    </div>
+
+    <div class="dashboard-content">
+      <!-- MY BOOKINGS -->
+      <div id="section-my-bookings">
+        <div id="bookings-container">
+          <div class="page-loader">
+            <div class="page-loader-spinner"></div>
+            <span>Loading bookings...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div id="section-profile" style="display:none;">
+        <div class="card" style="max-width:500px;">
+          <div class="card-body">
+            <h3 style="font-weight:700;margin-bottom:24px;">My Profile</h3>
+            <div id="alert-profile" class="alert"></div>
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" class="form-control" id="profile-name">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" class="form-control" id="profile-email" disabled style="background:var(--bg);">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number</label>
+              <input type="tel" class="form-control" id="profile-phone">
+            </div>
+            <button onclick="updateProfile()" class="btn btn-accent">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel Confirm Modal -->
+<div class="modal-overlay" id="cancel-modal">
+  <div class="modal">
+    <h3 class="modal-title">Cancel Booking</h3>
+    <p style="color:var(--text-secondary);margin-bottom:24px;">Are you sure you want to cancel this booking? This action cannot be undone.</p>
+    <div style="display:flex;gap:12px;">
+      <button onclick="closeModal()" class="btn btn-outline" style="flex:1;">Keep Booking</button>
+      <button onclick="confirmCancel()" class="btn btn-sm" style="flex:1;background:#ef4444;color:white;" id="confirm-cancel-btn">Yes, Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="src/api.js"></script>
+<script>
+  if (!isLoggedIn()) window.location.href = 'login.html';
+  if (isAdmin()) window.location.href = 'admin.html';
+
+  const user = getUser();
+  let cancelBookingId = null;
+
+  const categoryIcons = {
+    'AC Service': '❄️', 'Plumbing': '🔧', 'Electrician': '⚡',
+    'Home Cleaning': '🏠', 'Beauty Services': '💆', 'Pest Control': '🐛', 'Appliance Repair': '📺'
+  };
+
+  function showSection(name, btn) {
+    document.querySelectorAll('[id^="section-"]').forEach(s => s.style.display = 'none');
+    document.getElementById(`section-${name}`).style.display = '';
+    document.querySelectorAll('.sidebar-nav-item').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    const titles = { 'my-bookings': 'My Bookings', 'profile': 'My Profile' };
+    document.getElementById('page-title').textContent = titles[name] || '';
+  }
+
+  async function loadBookings() {
+    const container = document.getElementById('bookings-container');
+    try {
+      const data = await getUserBookings();
+
+      if (!data.bookings.length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <div class="empty-state-title">No bookings yet</div>
+            <div class="empty-state-sub">Book your first service today!</div>
+            <a href="services.html" class="btn btn-accent" style="margin-top:20px;">Browse Services</a>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `<div class="bookings-list">${data.bookings.map(b => `
+        <div class="booking-item">
+          <div class="booking-icon">${categoryIcons[b.serviceId?.category] || '🔧'}</div>
+          <div class="booking-info">
+            <div style="font-weight:700;margin-bottom:4px;">${b.serviceId?.serviceName || 'Service'}</div>
+            <div style="font-size:0.8rem;color:var(--text-secondary);">${b.serviceId?.category} • ${formatDate(b.date)} at ${b.time}</div>
+            <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px;">📍 ${b.address?.city}, ${b.address?.state}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-weight:700;font-size:1rem;margin-bottom:6px;">₹${b.totalAmount?.toLocaleString('en-IN')}</div>
+            <span class="badge badge-${b.status.toLowerCase().replace(' ', '')}">${b.status}</span>
+          </div>
+          <div class="booking-actions">
+            ${b.status === 'Pending' || b.status === 'Confirmed' ? `
+              <button onclick="openCancelModal('${b._id}')" class="btn btn-sm" style="background:#fee2e2;color:#dc2626;">Cancel</button>
+            ` : ''}
+            ${b.status === 'Completed' && !b.rating ? `
+              <button onclick="openReview('${b._id}')" class="btn btn-outline btn-sm">Rate</button>
+            ` : ''}
+            ${b.rating ? `<div style="font-size:0.8rem;color:#f59e0b;font-weight:600;">★ ${b.rating}</div>` : ''}
+          </div>
+        </div>
+      `).join('')}</div>`;
+    } catch (err) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">Could not load bookings</div></div>';
+    }
+  }
+
+  function loadProfile() {
+    document.getElementById('profile-name').value = user?.name || '';
+    document.getElementById('profile-email').value = user?.email || '';
+    document.getElementById('profile-phone').value = user?.phone || '';
+  }
+
+  async function updateProfile() {
+    try {
+      const data = await apiRequest('/auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: document.getElementById('profile-name').value,
+          phone: document.getElementById('profile-phone').value
+        })
+      });
+      const alert = document.getElementById('alert-profile');
+      alert.textContent = 'Profile updated successfully!';
+      alert.className = 'alert alert-success show';
+      saveAuth(localStorage.getItem('token'), data.user);
+      setTimeout(() => alert.className = 'alert', 3000);
+    } catch (err) {
+      const alert = document.getElementById('alert-profile');
+      alert.textContent = err.message;
+      alert.className = 'alert alert-error show';
+    }
+  }
+
+  function openCancelModal(id) {
+    cancelBookingId = id;
+    document.getElementById('cancel-modal').classList.add('show');
+  }
+
+  function closeModal() {
+    document.getElementById('cancel-modal').classList.remove('show');
+    cancelBookingId = null;
+  }
+
+  async function confirmCancel() {
+    if (!cancelBookingId) return;
+    try {
+      await cancelBooking(cancelBookingId);
+      closeModal();
+      showNotification('Booking cancelled successfully', 'success');
+      loadBookings();
+    } catch (err) {
+      showNotification(err.message, 'error');
+    }
+  }
+
+  loadBookings();
+  loadProfile();
+</script>
+</body>
+</html>

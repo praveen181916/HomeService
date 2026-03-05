@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Service Detail – ServeEasy</title>
+  <link rel="stylesheet" href="../styles/main.css"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="../../index.html" class="navbar-brand">
+    <div class="brand-logo">S</div>
+    <span class="brand-name">Serve<span>Easy</span></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="../../index.html">Home</a></li>
+    <li><a href="services.html">Services</a></li>
+    <li><a href="auth.html" class="btn btn-primary" id="authBtn">Login</a></li>
+  </ul>
+</nav>
+
+<div id="serviceDetail">
+  <div class="loading"><div class="spinner"></div></div>
+</div>
+
+<footer class="footer" style="margin-top:60px;">
+  <div class="footer-bottom" style="border-top:none;">
+    <span>© 2025 ServeEasy.</span>
+    <a href="services.html" style="color:var(--accent);">← All Services</a>
+  </div>
+</footer>
+
+<script>
+const API = 'http://localhost:5000/api';
+const ICONS = {'AC Service':'❄️','Plumbing':'🔧','Electrician':'⚡','Cleaning':'🧹','Beauty':'💆','Other':'🏠'};
+const FEATURES = {
+  'AC Service': ['Filter cleaning & replacement','Coil cleaning','Drain pipe cleaning','Gas pressure check','Performance testing'],
+  'Plumbing': ['Leak detection & repair','Pipe joint sealing','Water pressure check','New fittings installation','Post-repair testing'],
+  'Electrician': ['Safety inspection','Proper wiring','Certified equipment','Load testing','Warranty on work'],
+  'Cleaning': ['Eco-friendly products','Trained staff','All surfaces covered','Post-clean inspection','Satisfaction guarantee'],
+  'Beauty': ['Certified beauticians','Premium products','Hygiene guaranteed','Custom consultation','Follow-up support'],
+};
+const SAMPLE = [
+  {_id:'1',serviceName:'AC Deep Cleaning',price:699,description:'Complete AC unit deep cleaning including filters, coils, and drain pipe. Our certified technicians ensure your AC runs at peak efficiency.',category:'AC Service',duration:'2-3 hours'},
+  {_id:'2',serviceName:'AC Gas Refilling',price:1299,description:'Professional AC gas refilling with pressure check and leak detection using premium refrigerant.',category:'AC Service',duration:'1-2 hours'},
+  {_id:'3',serviceName:'Tap/Faucet Repair',price:299,description:'Fix leaking taps, faucets, and pipe joints quickly and efficiently by our expert plumbers.',category:'Plumbing',duration:'1 hour'},
+  {_id:'4',serviceName:'Drain Unclogging',price:499,description:'Professional drain unclogging service for kitchen and bathroom using advanced tools.',category:'Plumbing',duration:'1-2 hours'},
+  {_id:'5',serviceName:'Wiring & Switches',price:399,description:'Electrical wiring, switch board installation and repair by licensed electricians.',category:'Electrician',duration:'1-3 hours'},
+  {_id:'6',serviceName:'Fan Installation',price:249,description:'Ceiling fan and exhaust fan installation and repair. All safety checks included.',category:'Electrician',duration:'1 hour'},
+  {_id:'7',serviceName:'Full Home Cleaning',price:1999,description:'Complete home deep cleaning including kitchen, bathrooms, and living areas with premium eco-friendly products.',category:'Cleaning',duration:'4-6 hours'},
+  {_id:'8',serviceName:'Bathroom Cleaning',price:599,description:'Thorough bathroom sanitization and cleaning service ensuring complete hygiene.',category:'Cleaning',duration:'1-2 hours'},
+  {_id:'9',serviceName:'Haircut at Home',price:349,description:'Professional haircut and styling at the comfort of your home by trained stylists.',category:'Beauty',duration:'45 mins'},
+  {_id:'10',serviceName:'Facial & Cleanup',price:799,description:'Relaxing facial and skin cleanup by certified beauticians using premium skin care products.',category:'Beauty',duration:'1.5 hours'}
+];
+
+const params = new URLSearchParams(window.location.search);
+const serviceId = params.get('id');
+
+async function loadService() {
+  let service;
+  try {
+    const res = await fetch(`${API}/services/${serviceId}`);
+    if (res.ok) service = await res.json();
+    else throw new Error();
+  } catch {
+    service = SAMPLE.find(s => s._id === serviceId) || SAMPLE[0];
+  }
+  renderService(service);
+}
+
+function renderService(s) {
+  const features = FEATURES[s.category] || ['Quality service','Trained professionals','On-time arrival','Satisfaction guaranteed','Post-service support'];
+  document.getElementById('serviceDetail').innerHTML = `
+    <div class="page-header">
+      <div class="breadcrumb">
+        <a href="../../index.html">Home</a> ›
+        <a href="services.html">Services</a> ›
+        ${s.serviceName}
+      </div>
+    </div>
+    <div class="service-detail-grid">
+      <div class="service-detail-img">${ICONS[s.category] || '🏠'}</div>
+      <div class="service-detail-info">
+        <div class="service-detail-category">${s.category}</div>
+        <h1 class="service-detail-title">${s.serviceName}</h1>
+        <div class="service-detail-price">₹${s.price.toLocaleString()}</div>
+        <div class="service-detail-duration">⏱ Duration: ${s.duration} &nbsp;|&nbsp; ⭐ 4.8 (1.2k reviews)</div>
+        <p class="service-detail-desc">${s.description}</p>
+        <ul class="service-features">
+          ${features.map(f => `<li>${f}</li>`).join('')}
+        </ul>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button onclick="bookNow('${s._id}')" class="btn btn-primary btn-lg">Book Now – ₹${s.price.toLocaleString()}</button>
+          <a href="services.html" class="btn btn-outline btn-lg">← Back</a>
+        </div>
+        <div style="margin-top:20px;padding:16px;background:var(--accent-light);border-radius:var(--radius-sm);font-size:0.87rem;">
+          🔒 <strong>Fully Verified Professional</strong> &nbsp;|&nbsp; ✅ <strong>Insured Service</strong> &nbsp;|&nbsp; 💳 <strong>Pay After Service</strong>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function bookNow(id) {
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  if (!user) { window.location.href = 'auth.html'; return; }
+  window.location.href = `booking.html?serviceId=${id}`;
+}
+
+const user = JSON.parse(localStorage.getItem('user') || 'null');
+if (user) { document.getElementById('authBtn').textContent = user.name.split(' ')[0]; document.getElementById('authBtn').href = 'bookings.html'; }
+
+loadService();
+</script>
+</body>
+</html>

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard – HomeService</title>
+  <link rel="stylesheet" href="src/styles.css">
+  <style>
+    .dashboard-content { padding: 32px; }
+    .stat-card-icon.teal { background: var(--accent-light); }
+    .stat-card-icon.purple { background: #f3e8ff; }
+    .stat-card-icon.orange { background: #fef3c7; }
+    .stat-card-icon.red { background: #fee2e2; }
+    .table-actions { display: flex; gap: 8px; }
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .form-grid-2 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<div class="dashboard">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">Home<span>Service</span></div>
+      <div style="font-size:0.75rem;color:#64748b;margin-top:4px;">Admin Panel</div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-nav-item active" onclick="showSection('overview', this)">📊 Overview</button>
+      <div class="sidebar-section-label">Management</div>
+      <button class="sidebar-nav-item" onclick="showSection('services', this)">🛠️ Services</button>
+      <button class="sidebar-nav-item" onclick="showSection('bookings', this)">📋 Bookings</button>
+      <button class="sidebar-nav-item" onclick="showSection('providers', this)">👷 Providers</button>
+      <div class="sidebar-section-label">Account</div>
+      <a href="index.html" class="sidebar-nav-item">🏠 View Site</a>
+      <button class="sidebar-nav-item" onclick="logout()" style="color:#ef4444;">🚪 Logout</button>
+    </nav>
+  </div>
+
+  <!-- MAIN -->
+  <div class="dashboard-main">
+    <div class="dashboard-header">
+      <h1 id="page-title">Overview</h1>
+      <div id="header-action"></div>
+    </div>
+
+    <div class="dashboard-content">
+      <!-- OVERVIEW -->
+      <div id="section-overview">
+        <div class="stat-cards" id="stat-cards">
+          <div class="page-loader" style="grid-column:1/-1;"><div class="page-loader-spinner"></div><span>Loading analytics...</span></div>
+        </div>
+        <div class="table-wrapper" style="margin-top:24px;">
+          <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+            <strong>Recent Bookings</strong>
+          </div>
+          <table class="data-table" id="recent-bookings-table">
+            <thead><tr><th>Customer</th><th>Service</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+            <tbody id="recent-bookings-body">
+              <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SERVICES MANAGEMENT -->
+      <div id="section-services" style="display:none;">
+        <div style="margin-bottom:24px;">
+          <button onclick="showAddServiceModal()" class="btn btn-accent">+ Add New Service</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>Service Name</th><th>Category</th><th>Price</th><th>Rating</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="services-tbody">
+              <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-muted);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- BOOKINGS MANAGEMENT -->
+      <div id="section-bookings" style="display:none;">
+        <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="filter-tab active" onclick="loadAllBookings('', this)" style="padding:8px 16px;border-radius:100px;font-size:0.82rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:white;color:var(--text-secondary);transition:all 0.2s;font-family:inherit;">All</button>
+          <button class="filter-tab" onclick="loadAllBookings('Pending', this)" style="padding:8px 16px;border-radius:100px;font-size:0.82rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:white;color:var(--text-secondary);transition:all 0.2s;font-family:inherit;">Pending</button>
+          <button class="filter-tab" onclick="loadAllBookings('Confirmed', this)" style="padding:8px 16px;border-radius:100px;font-size:0.82rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:white;color:var(--text-secondary);transition:all 0.2s;font-family:inherit;">Confirmed</button>
+          <button class="filter-tab" onclick="loadAllBookings('Completed', this)" style="padding:8px 16px;border-radius:100px;font-size:0.82rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:white;color:var(--text-secondary);transition:all 0.2s;font-family:inherit;">Completed</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>Customer</th><th>Service</th><th>Date & Time</th><th>Address</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="bookings-tbody">
+              <tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PROVIDERS MANAGEMENT -->
+      <div id="section-providers" style="display:none;">
+        <div style="margin-bottom:24px;">
+          <button onclick="showAddProviderModal()" class="btn btn-accent">+ Add Provider</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Category</th><th>Phone</th><th>Experience</th><th>Rating</th><th>Available</th><th>Actions</th></tr></thead>
+            <tbody id="providers-tbody">
+              <tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD SERVICE MODAL -->
+<div class="modal-overlay" id="service-modal">
+  <div class="modal" style="max-width:600px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h3 class="modal-title" style="margin-bottom:0;" id="service-modal-title">Add New Service</h3>
+      <button onclick="document.getElementById('service-modal').classList.remove('show')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;">✕</button>
+    </div>
+    <div id="service-alert" class="alert"></div>
+    <form id="service-form" onsubmit="handleServiceSubmit(event)" style="max-height:70vh;overflow-y:auto;padding-right:8px;">
+      <input type="hidden" id="edit-service-id">
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Service Name *</label>
+          <input type="text" class="form-control" id="svc-name" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category *</label>
+          <select class="form-control form-select" id="svc-category" required>
+            <option value="">Select category</option>
+            <option>AC Service</option><option>Plumbing</option><option>Electrician</option>
+            <option>Home Cleaning</option><option>Beauty Services</option><option>Pest Control</option><option>Appliance Repair</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Price (₹) *</label>
+          <input type="number" class="form-control" id="svc-price" min="0" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Duration *</label>
+          <input type="text" class="form-control" id="svc-duration" placeholder="e.g., 2-3 hours" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description *</label>
+        <textarea class="form-control" id="svc-desc" rows="3" required style="resize:vertical;"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Image URL</label>
+        <input type="url" class="form-control" id="svc-image" placeholder="https://...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Features (comma-separated)</label>
+        <input type="text" class="form-control" id="svc-features" placeholder="Filter cleaning, Gas check, 30-day warranty">
+      </div>
+      <button type="submit" class="btn btn-accent btn-full" id="service-submit-btn">Add Service</button>
+    </form>
+  </div>
+</div>
+
+<!-- ADD PROVIDER MODAL -->
+<div class="modal-overlay" id="provider-modal">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h3 class="modal-title" style="margin-bottom:0;">Add Provider</h3>
+      <button onclick="document.getElementById('provider-modal').classList.remove('show')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;">✕</button>
+    </div>
+    <div id="provider-alert" class="alert"></div>
+    <form id="provider-form" onsubmit="handleProviderSubmit(event)">
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" class="form-control" id="prov-name" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone *</label>
+          <input type="tel" class="form-control" id="prov-phone" pattern="[0-9]{10}" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email *</label>
+        <input type="email" class="form-control" id="prov-email" required>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Service Category *</label>
+          <select class="form-control form-select" id="prov-category" required>
+            <option value="">Select</option>
+            <option>AC Service</option><option>Plumbing</option><option>Electrician</option>
+            <option>Home Cleaning</option><option>Beauty Services</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Years of Experience</label>
+          <input type="number" class="form-control" id="prov-exp" min="0" value="1">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-accent btn-full" id="provider-submit-btn">Add Provider</button>
+    </form>
+  </div>
+</div>
+
+<script src="src/api.js"></script>
+<script>
+  if (!isLoggedIn() || !isAdmin()) window.location.href = 'login.html';
+
+  function showSection(name, btn) {
+    document.querySelectorAll('[id^="section-"]').forEach(s => s.style.display = 'none');
+    document.getElementById(`section-${name}`).style.display = '';
+    document.querySelectorAll('.sidebar-nav-item').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    const titles = { overview: 'Overview', services: 'Manage Services', bookings: 'All Bookings', providers: 'Service Providers' };
+    document.getElementById('page-title').textContent = titles[name] || '';
+
+    if (name === 'services') loadAdminServices();
+    if (name === 'bookings') loadAllBookings();
+    if (name === 'providers') loadAdminProviders();
+  }
+
+  // ========== OVERVIEW ========== //
+  async function loadAnalytics() {
+    try {
+      const data = await getAnalytics();
+      const a = data.analytics;
+
+      document.getElementById('stat-cards').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-card-icon teal" style="font-size:1.5rem;">📋</div>
+          <div><div class="stat-card-num">${a.totalBookings}</div><div class="stat-card-label">Total Bookings</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon orange" style="font-size:1.5rem;">⏳</div>
+          <div><div class="stat-card-num">${a.pendingBookings}</div><div class="stat-card-label">Pending</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon" style="background:#d1fae5;font-size:1.5rem;">✅</div>
+          <div><div class="stat-card-num">${a.completedBookings}</div><div class="stat-card-label">Completed</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon purple" style="font-size:1.5rem;">💰</div>
+          <div><div class="stat-card-num">₹${a.totalRevenue.toLocaleString('en-IN')}</div><div class="stat-card-label">Total Revenue</div></div>
+        </div>
+      `;
+
+      document.getElementById('recent-bookings-body').innerHTML = a.recentBookings.map(b => `
+        <tr>
+          <td><strong>${b.userId?.name || 'User'}</strong></td>
+          <td>${b.serviceId?.serviceName || 'Service'}</td>
+          <td>${formatDate(b.date)}</td>
+          <td><strong>₹${b.totalAmount?.toLocaleString('en-IN')}</strong></td>
+          <td><span class="badge badge-${b.status.toLowerCase()}">${b.status}</span></td>
+        </tr>
+      `).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">No bookings yet</td></tr>';
+    } catch (err) {
+      document.getElementById('stat-cards').innerHTML = '<div style="color:var(--text-muted);padding:20px;">Could not load analytics. Make sure backend is running.</div>';
+    }
+  }
+
+  // ========== SERVICES ========== //
+  async function loadAdminServices() {
+    try {
+      const data = await getServices();
+      document.getElementById('services-tbody').innerHTML = data.services.map(s => `
+        <tr>
+          <td><strong>${s.serviceName}</strong></td>
+          <td><span class="service-category-tag">${s.category}</span></td>
+          <td>₹${s.price.toLocaleString('en-IN')}</td>
+          <td>★ ${s.rating} (${s.totalReviews})</td>
+          <td><span class="badge ${s.isActive ? 'badge-confirmed' : 'badge-cancelled'}">${s.isActive ? 'Active' : 'Inactive'}</span></td>
+          <td>
+            <div class="table-actions">
+              <button onclick='editService(${JSON.stringify(s)})' class="btn btn-sm btn-outline">Edit</button>
+              <button onclick="deleteServiceItem('${s._id}')" class="btn btn-sm" style="background:#fee2e2;color:#dc2626;">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">No services found</td></tr>';
+    } catch (err) {
+      document.getElementById('services-tbody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">Error loading services</td></tr>';
+    }
+  }
+
+  function showAddServiceModal() {
+    document.getElementById('service-form').reset();
+    document.getElementById('edit-service-id').value = '';
+    document.getElementById('service-modal-title').textContent = 'Add New Service';
+    document.getElementById('service-submit-btn').textContent = 'Add Service';
+    document.getElementById('service-alert').className = 'alert';
+    document.getElementById('service-modal').classList.add('show');
+  }
+
+  function editService(s) {
+    document.getElementById('edit-service-id').value = s._id;
+    document.getElementById('svc-name').value = s.serviceName;
+    document.getElementById('svc-category').value = s.category;
+    document.getElementById('svc-price').value = s.price;
+    document.getElementById('svc-duration').value = s.duration;
+    document.getElementById('svc-desc').value = s.description;
+    document.getElementById('svc-image').value = s.image || '';
+    document.getElementById('svc-features').value = (s.features || []).join(', ');
+    document.getElementById('service-modal-title').textContent = 'Edit Service';
+    document.getElementById('service-submit-btn').textContent = 'Update Service';
+    document.getElementById('service-modal').classList.add('show');
+  }
+
+  async function handleServiceSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('edit-service-id').value;
+    const btn = document.getElementById('service-submit-btn');
+    btn.disabled = true; btn.innerHTML = '<span class="loader"></span>';
+
+    const payload = {
+      serviceName: document.getElementById('svc-name').value,
+      category: document.getElementById('svc-category').value,
+      price: Number(document.getElementById('svc-price').value),
+      duration: document.getElementById('svc-duration').value,
+      description: document.getElementById('svc-desc').value,
+      image: document.getElementById('svc-image').value,
+      features: document.getElementById('svc-features').value.split(',').map(f => f.trim()).filter(Boolean)
+    };
+
+    try {
+      if (id) await updateService(id, payload);
+      else await createService(payload);
+
+      document.getElementById('service-modal').classList.remove('show');
+      showNotification(id ? 'Service updated!' : 'Service added!', 'success');
+      loadAdminServices();
+    } catch (err) {
+      const alert = document.getElementById('service-alert');
+      alert.textContent = err.message;
+      alert.className = 'alert alert-error show';
+    }
+    btn.disabled = false;
+    btn.textContent = id ? 'Update Service' : 'Add Service';
+  }
+
+  async function deleteServiceItem(id) {
+    if (!confirm('Delete this service?')) return;
+    try {
+      await deleteService(id);
+      showNotification('Service deleted', 'success');
+      loadAdminServices();
+    } catch (err) {
+      showNotification(err.message, 'error');
+    }
+  }
+
+  // ========== BOOKINGS ========== //
+  async function loadAllBookings(status = '', btn) {
+    if (btn) {
+      document.querySelectorAll('.filter-tab').forEach(t => { t.style.borderColor = 'var(--border)'; t.style.color = 'var(--text-secondary)'; t.style.background = 'white'; });
+      btn.style.borderColor = 'var(--accent)'; btn.style.color = 'var(--accent)'; btn.style.background = 'var(--accent-light)';
+    }
+    try {
+      const data = await getAllBookings(status);
+      document.getElementById('bookings-tbody').innerHTML = data.bookings.map(b => `
+        <tr>
+          <td><strong>${b.userId?.name || 'User'}</strong><div style="font-size:0.75rem;color:var(--text-muted);">${b.userId?.phone || ''}</div></td>
+          <td>${b.serviceId?.serviceName || 'Service'}</td>
+          <td>${formatDate(b.date)}<br><span style="font-size:0.75rem;color:var(--text-muted);">${b.time}</span></td>
+          <td style="font-size:0.8rem;">${b.address?.city}, ${b.address?.state}</td>
+          <td><strong>₹${b.totalAmount?.toLocaleString('en-IN')}</strong></td>
+          <td><span class="badge badge-${b.status.toLowerCase().replace(' ', '')}">${b.status}</span></td>
+          <td>
+            <select onchange="changeBookingStatus('${b._id}', this.value)" class="form-control" style="padding:6px;font-size:0.8rem;width:auto;">
+              <option value="" disabled selected>Update</option>
+              <option value="Confirmed">Confirm</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Complete</option>
+              <option value="Cancelled">Cancel</option>
+            </select>
+          </td>
+        </tr>
+      `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);">No bookings found</td></tr>';
+    } catch (err) {
+      document.getElementById('bookings-tbody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);">Error loading bookings</td></tr>';
+    }
+  }
+
+  async function changeBookingStatus(id, status) {
+    try {
+      await updateBookingStatus(id, status);
+      showNotification(`Booking marked as ${status}`, 'success');
+      loadAllBookings();
+    } catch (err) {
+      showNotification(err.message, 'error');
+    }
+  }
+
+  // ========== PROVIDERS ========== //
+  async function loadAdminProviders() {
+    try {
+      const data = await getProviders();
+      document.getElementById('providers-tbody').innerHTML = data.providers.map(p => `
+        <tr>
+          <td><strong>${p.name}</strong></td>
+          <td><span class="service-category-tag">${p.serviceCategory}</span></td>
+          <td>${p.phone}</td>
+          <td>${p.experience} yrs</td>
+          <td>★ ${p.rating}</td>
+          <td><span class="badge ${p.availability ? 'badge-confirmed' : 'badge-cancelled'}">${p.availability ? 'Available' : 'Busy'}</span></td>
+          <td>
+            <button onclick="deleteProviderItem('${p._id}')" class="btn btn-sm" style="background:#fee2e2;color:#dc2626;">Remove</button>
+          </td>
+        </tr>
+      `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);">No providers found</td></tr>';
+    } catch (err) {
+      document.getElementById('providers-tbody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);">Error loading providers</td></tr>';
+    }
+  }
+
+  function showAddProviderModal() {
+    document.getElementById('provider-form').reset();
+    document.getElementById('provider-modal').classList.add('show');
+  }
+
+  async function handleProviderSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('provider-submit-btn');
+    btn.disabled = true; btn.innerHTML = '<span class="loader"></span>';
+
+    try {
+      await createProvider({
+        name: document.getElementById('prov-name').value,
+        email: document.getElementById('prov-email').value,
+        phone: document.getElementById('prov-phone').value,
+        serviceCategory: document.getElementById('prov-category').value,
+        experience: Number(document.getElementById('prov-exp').value)
+      });
+      document.getElementById('provider-modal').classList.remove('show');
+      showNotification('Provider added!', 'success');
+      loadAdminProviders();
+    } catch (err) {
+      const alert = document.getElementById('provider-alert');
+      alert.textContent = err.message;
+      alert.className = 'alert alert-error show';
+    }
+    btn.disabled = false; btn.textContent = 'Add Provider';
+  }
+
+  async function deleteProviderItem(id) {
+    if (!confirm('Remove this provider?')) return;
+    try {
+      await deleteProvider(id);
+      showNotification('Provider removed', 'success');
+      loadAdminProviders();
+    } catch (err) {
+      showNotification(err.message, 'error');
+    }
+  }
+
+  // Close modals on backdrop click
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.classList.remove('show');
+    });
+  });
+
+  loadAnalytics();
+</script>
+</body>
+</html>

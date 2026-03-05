@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Book Service – ServeEasy</title>
+  <link rel="stylesheet" href="../styles/main.css"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="../../index.html" class="navbar-brand">
+    <div class="brand-logo">S</div>
+    <span class="brand-name">Serve<span>Easy</span></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="../../index.html">Home</a></li>
+    <li><a href="services.html">Services</a></li>
+    <li><span id="userName" style="font-weight:600;font-size:0.9rem;padding:8px 14px;"></span></li>
+  </ul>
+</nav>
+
+<div class="booking-page">
+  <div class="booking-container">
+    <div class="page-header" style="padding:0;margin-bottom:28px;">
+      <div class="breadcrumb"><a href="../../index.html">Home</a> › <a href="services.html">Services</a> › Book</div>
+      <h1 style="margin-top:8px;">Complete Your Booking</h1>
+    </div>
+
+    <div id="alertBox"></div>
+
+    <!-- SERVICE INFO -->
+    <div class="booking-card">
+      <div class="booking-service-info" id="serviceInfo">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+
+      <!-- BOOKING FORM -->
+      <form onsubmit="submitBooking(event)">
+        <!-- DATE -->
+        <div class="form-group">
+          <label class="form-label">📅 Select Date</label>
+          <input type="date" class="form-control" id="bookDate" required/>
+        </div>
+
+        <!-- TIME SLOTS -->
+        <div class="form-group">
+          <label class="form-label">🕐 Select Time Slot</label>
+          <div class="time-slots">
+            <div class="time-slot" onclick="selectTime(this,'09:00 AM')">09:00 AM</div>
+            <div class="time-slot" onclick="selectTime(this,'10:00 AM')">10:00 AM</div>
+            <div class="time-slot" onclick="selectTime(this,'11:00 AM')">11:00 AM</div>
+            <div class="time-slot" onclick="selectTime(this,'12:00 PM')">12:00 PM</div>
+            <div class="time-slot" onclick="selectTime(this,'02:00 PM')">02:00 PM</div>
+            <div class="time-slot" onclick="selectTime(this,'03:00 PM')">03:00 PM</div>
+            <div class="time-slot" onclick="selectTime(this,'04:00 PM')">04:00 PM</div>
+            <div class="time-slot" onclick="selectTime(this,'05:00 PM')">05:00 PM</div>
+          </div>
+          <input type="hidden" id="bookTime" required/>
+        </div>
+
+        <!-- ADDRESS -->
+        <div class="form-group">
+          <label class="form-label">📍 Service Address</label>
+          <textarea class="form-control" id="bookAddress" rows="3" placeholder="Enter your full address including flat/house no., street, area, city, pincode..." required style="resize:vertical;"></textarea>
+        </div>
+
+        <!-- PAYMENT NOTE -->
+        <div style="background:var(--accent-light);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px;font-size:0.87rem;">
+          💳 <strong>Payment:</strong> Pay after the service is completed. We accept Cash, UPI, and Card payments.
+        </div>
+
+        <!-- SUMMARY -->
+        <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:18px;margin-bottom:22px;">
+          <div style="font-weight:700;margin-bottom:12px;">Order Summary</div>
+          <div style="display:flex;justify-content:space-between;font-size:0.9rem;margin-bottom:8px;">
+            <span id="summaryService">Service</span>
+            <span id="summaryPrice">₹0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.9rem;color:var(--muted);margin-bottom:8px;">
+            <span>Platform Fee</span><span>₹0</span>
+          </div>
+          <div style="border-top:1px solid var(--border);margin:10px 0;"></div>
+          <div style="display:flex;justify-content:space-between;font-weight:800;font-size:1.05rem;">
+            <span>Total</span><span id="summaryTotal">₹0</span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;" id="bookBtn">
+          Confirm Booking
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:5000/api';
+const ICONS = {'AC Service':'❄️','Plumbing':'🔧','Electrician':'⚡','Cleaning':'🧹','Beauty':'💆','Other':'🏠'};
+const SAMPLE = [
+  {_id:'1',serviceName:'AC Deep Cleaning',price:699,category:'AC Service',duration:'2-3 hours'},
+  {_id:'2',serviceName:'AC Gas Refilling',price:1299,category:'AC Service',duration:'1-2 hours'},
+  {_id:'3',serviceName:'Tap/Faucet Repair',price:299,category:'Plumbing',duration:'1 hour'},
+  {_id:'4',serviceName:'Drain Unclogging',price:499,category:'Plumbing',duration:'1-2 hours'},
+  {_id:'5',serviceName:'Wiring & Switches',price:399,category:'Electrician',duration:'1-3 hours'},
+  {_id:'6',serviceName:'Fan Installation',price:249,category:'Electrician',duration:'1 hour'},
+  {_id:'7',serviceName:'Full Home Cleaning',price:1999,category:'Cleaning',duration:'4-6 hours'},
+  {_id:'8',serviceName:'Bathroom Cleaning',price:599,category:'Cleaning',duration:'1-2 hours'},
+  {_id:'9',serviceName:'Haircut at Home',price:349,category:'Beauty',duration:'45 mins'},
+  {_id:'10',serviceName:'Facial & Cleanup',price:799,category:'Beauty',duration:'1.5 hours'}
+];
+
+let currentService = null;
+const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+if (!user) window.location.href = 'auth.html';
+document.getElementById('userName').textContent = `👤 ${user?.name}`;
+
+// Set min date to today
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('bookDate').min = today;
+document.getElementById('bookDate').value = today;
+
+const params = new URLSearchParams(window.location.search);
+const serviceId = params.get('serviceId');
+
+async function loadService() {
+  try {
+    const res = await fetch(`${API}/services/${serviceId}`);
+    if (res.ok) currentService = await res.json();
+    else throw new Error();
+  } catch {
+    currentService = SAMPLE.find(s => s._id === serviceId) || SAMPLE[0];
+  }
+  document.getElementById('serviceInfo').innerHTML = `
+    <div class="booking-service-icon">${ICONS[currentService.category] || '🏠'}</div>
+    <div>
+      <div class="booking-service-title">${currentService.serviceName}</div>
+      <div class="booking-service-price">₹${currentService.price.toLocaleString()} &nbsp;|&nbsp; ⏱ ${currentService.duration}</div>
+    </div>
+  `;
+  document.getElementById('summaryService').textContent = currentService.serviceName;
+  document.getElementById('summaryPrice').textContent = `₹${currentService.price.toLocaleString()}`;
+  document.getElementById('summaryTotal').textContent = `₹${currentService.price.toLocaleString()}`;
+}
+
+let selectedTime = '';
+function selectTime(el, time) {
+  document.querySelectorAll('.time-slot').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTime = time;
+  document.getElementById('bookTime').value = time;
+}
+
+function showAlert(msg, type) {
+  document.getElementById('alertBox').innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+}
+
+async function submitBooking(e) {
+  e.preventDefault();
+  if (!selectedTime) { showAlert('Please select a time slot.', 'error'); return; }
+  const btn = document.getElementById('bookBtn');
+  btn.textContent = 'Confirming...'; btn.disabled = true;
+
+  const bookingData = {
+    serviceId: currentService._id,
+    date: document.getElementById('bookDate').value,
+    time: selectedTime,
+    address: document.getElementById('bookAddress').value
+  };
+
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API}/bookings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify(bookingData)
+    });
+    if (res.ok) {
+      window.location.href = `booking-success.html?service=${encodeURIComponent(currentService.serviceName)}&date=${bookingData.date}&time=${selectedTime}`;
+    } else {
+      const d = await res.json();
+      showAlert(d.message, 'error');
+    }
+  } catch {
+    // Demo mode - simulate success
+    window.location.href = `booking-success.html?service=${encodeURIComponent(currentService.serviceName)}&date=${bookingData.date}&time=${selectedTime}`;
+  }
+  btn.textContent = 'Confirm Booking'; btn.disabled = false;
+}
+
+loadService();
+</script>
+</body>
+</html>

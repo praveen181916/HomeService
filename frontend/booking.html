@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Service – HomeService</title>
+  <link rel="stylesheet" href="src/styles.css">
+  <style>
+    .booking-page { padding: 48px 0; }
+    .step-indicator { display: flex; align-items: center; gap: 0; margin-bottom: 40px; }
+    .step-dot { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; border: 2px solid var(--border); background: white; color: var(--text-muted); flex-shrink: 0; }
+    .step-dot.active { background: var(--accent); border-color: var(--accent); color: white; }
+    .step-dot.done { background: var(--primary); border-color: var(--primary); color: white; }
+    .step-line { flex: 1; height: 2px; background: var(--border); }
+    .step-line.done { background: var(--primary); }
+    .form-section { margin-bottom: 32px; }
+    .form-section-title { font-size: 1rem; font-weight: 700; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="index.html" class="navbar-brand">
+      <div class="navbar-logo">H</div>
+      <span class="navbar-brand-text">Home<span>Service</span></span>
+    </a>
+    <ul class="navbar-links">
+      <li><a href="services.html">Services</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <div id="nav-user" style="display:none; align-items:center; gap:10px;">
+        <a href="dashboard.html" class="btn btn-outline btn-sm">My Bookings</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="booking-page">
+  <div class="container" style="max-width:960px;">
+    <div style="margin-bottom:24px;">
+      <a href="services.html" style="color:var(--accent);text-decoration:none;font-size:0.875rem;font-weight:500;">← Back to Services</a>
+    </div>
+
+    <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:6px;">Book Your Service</h1>
+    <p style="color:var(--text-secondary);margin-bottom:32px;font-size:0.9rem;">Fill in the details below to confirm your booking</p>
+
+    <div id="booking-content">
+      <div class="page-loader">
+        <div class="page-loader-spinner"></div>
+        <span>Loading...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="src/api.js"></script>
+<script>
+  if (!isLoggedIn()) window.location.href = 'login.html';
+
+  const params = new URLSearchParams(window.location.search);
+  const serviceId = params.get('id');
+  if (!serviceId) window.location.href = 'services.html';
+
+  let selectedTime = '';
+  let serviceData = null;
+
+  const timeSlots = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM'];
+
+  async function loadBookingPage() {
+    try {
+      const data = await getService(serviceId);
+      serviceData = data.service;
+
+      // Get min date (today)
+      const today = new Date().toISOString().split('T')[0];
+
+      document.getElementById('booking-content').innerHTML = `
+        <div class="booking-grid">
+          <div>
+            <div class="card" style="margin-bottom:24px;">
+              <div class="card-body">
+                <div id="alert" class="alert"></div>
+                <form id="booking-form" onsubmit="handleBooking(event)">
+
+                  <div class="form-section">
+                    <div class="form-section-title">📅 Select Date & Time</div>
+                    <div class="grid-2">
+                      <div class="form-group">
+                        <label class="form-label">Preferred Date *</label>
+                        <input type="date" class="form-control" id="booking-date" min="${today}" required>
+                      </div>
+                    </div>
+                    <div class="form-group" style="margin-top:16px;">
+                      <label class="form-label">Preferred Time Slot *</label>
+                      <div class="time-slots">
+                        ${timeSlots.map(t => `
+                          <button type="button" class="time-slot" onclick="selectTime('${t}', this)">${t}</button>
+                        `).join('')}
+                      </div>
+                      <input type="hidden" id="booking-time" required>
+                    </div>
+                  </div>
+
+                  <div class="form-section">
+                    <div class="form-section-title">📍 Service Address</div>
+                    <div class="form-group">
+                      <label class="form-label">Street / House No *</label>
+                      <input type="text" class="form-control" id="addr-street" placeholder="e.g., 123, MG Road, 2nd Floor" required>
+                    </div>
+                    <div class="grid-2">
+                      <div class="form-group">
+                        <label class="form-label">City *</label>
+                        <input type="text" class="form-control" id="addr-city" placeholder="Mumbai" required>
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">State *</label>
+                        <input type="text" class="form-control" id="addr-state" placeholder="Maharashtra" required>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">PIN Code *</label>
+                      <input type="text" class="form-control" id="addr-pincode" placeholder="400001" maxlength="6" pattern="[0-9]{6}" required>
+                    </div>
+                  </div>
+
+                  <div class="form-section">
+                    <div class="form-section-title">💳 Payment</div>
+                    <div class="form-group">
+                      <label class="form-label">Payment Method</label>
+                      <select class="form-select form-control" id="payment-method">
+                        <option value="Cash">Cash on Service</option>
+                        <option value="Online">Online Payment</option>
+                        <option value="UPI">UPI</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Special Instructions (Optional)</label>
+                      <textarea class="form-control" id="booking-notes" rows="3" placeholder="Any specific requirements or instructions..." style="resize:vertical;"></textarea>
+                    </div>
+                  </div>
+
+                  <button type="submit" class="btn btn-accent btn-full btn-lg" id="confirm-btn">
+                    ✅ Confirm Booking
+                  </button>
+                  <p style="text-align:center;font-size:0.75rem;color:var(--text-muted);margin-top:12px;">By confirming, you agree to our terms. Free cancellation up to 24 hrs before.</p>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUMMARY SIDEBAR -->
+          <div>
+            <div class="booking-summary-card">
+              <h3 style="font-weight:700;font-size:1rem;margin-bottom:20px;">Booking Summary</h3>
+              <img src="${serviceData.image || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400'}" style="width:100%;height:140px;object-fit:cover;border-radius:var(--radius);margin-bottom:16px;" onerror="this.style.display='none'">
+              <div style="font-weight:700;font-size:1.05rem;margin-bottom:6px;">${serviceData.serviceName}</div>
+              <span class="service-category-tag">${serviceData.category}</span>
+
+              <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+                <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:0.875rem;">
+                  <span style="color:var(--text-secondary);">Service Charge</span>
+                  <strong>₹${serviceData.price.toLocaleString('en-IN')}</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:0.875rem;">
+                  <span style="color:var(--text-secondary);">Duration</span>
+                  <strong>${serviceData.duration}</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:16px;font-size:0.875rem;">
+                  <span style="color:var(--text-secondary);">Rating</span>
+                  <strong>★ ${serviceData.rating}/5</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border);">
+                  <span style="font-weight:700;">Total</span>
+                  <strong style="font-size:1.15rem;color:var(--accent);">₹${serviceData.price.toLocaleString('en-IN')}</strong>
+                </div>
+              </div>
+
+              <div style="margin-top:20px;background:var(--accent-light);border-radius:var(--radius-sm);padding:14px;">
+                <div style="font-size:0.8rem;color:var(--accent);font-weight:600;margin-bottom:6px;">✅ You're Protected</div>
+                <div style="font-size:0.78rem;color:#0f766e;line-height:1.6;">Verified professionals · Free reschedule · 30-day service guarantee</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('confirm-btn').dataset.text = '✅ Confirm Booking';
+    } catch (err) {
+      document.getElementById('booking-content').innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">Service not found</div></div>';
+    }
+  }
+
+  function selectTime(time, btn) {
+    document.querySelectorAll('.time-slot').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    selectedTime = time;
+    document.getElementById('booking-time').value = time;
+  }
+
+  function showAlert(msg, type) {
+    const alert = document.getElementById('alert');
+    alert.textContent = msg;
+    alert.className = `alert alert-${type} show`;
+    alert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  async function handleBooking(e) {
+    e.preventDefault();
+    if (!selectedTime) {
+      showAlert('Please select a time slot', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('confirm-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Confirming...';
+
+    try {
+      const bookingData = {
+        serviceId: serviceId,
+        date: document.getElementById('booking-date').value,
+        time: selectedTime,
+        address: {
+          street: document.getElementById('addr-street').value,
+          city: document.getElementById('addr-city').value,
+          state: document.getElementById('addr-state').value,
+          pincode: document.getElementById('addr-pincode').value
+        },
+        paymentMethod: document.getElementById('payment-method').value,
+        notes: document.getElementById('booking-notes').value
+      };
+
+      const data = await createBooking(bookingData);
+      showNotification('Booking confirmed! 🎉', 'success');
+
+      // Show success state
+      document.querySelector('.booking-grid').innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:60px 20px;">
+          <div style="font-size:4rem;margin-bottom:20px;">🎉</div>
+          <h2 style="font-size:1.6rem;font-weight:800;margin-bottom:10px;">Booking Confirmed!</h2>
+          <p style="color:var(--text-secondary);margin-bottom:8px;">Your <strong>${serviceData.serviceName}</strong> has been booked successfully.</p>
+          <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:32px;">You'll receive a confirmation shortly. A professional will be assigned to your booking.</p>
+          <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+            <a href="dashboard.html" class="btn btn-accent btn-lg">View My Bookings</a>
+            <a href="services.html" class="btn btn-outline btn-lg">Book Another Service</a>
+          </div>
+        </div>
+      `;
+    } catch (err) {
+      showAlert(err.message || 'Booking failed. Please try again.', 'error');
+      btn.disabled = false;
+      btn.textContent = btn.dataset.text;
+    }
+  }
+
+  loadBookingPage();
+</script>
+</body>
+</html>

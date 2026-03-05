@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>My Bookings – ServeEasy</title>
+  <link rel="stylesheet" href="../styles/main.css"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="../../index.html" class="navbar-brand">
+    <div class="brand-logo">S</div>
+    <span class="brand-name">Serve<span>Easy</span></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="../../index.html">Home</a></li>
+    <li><a href="services.html">Services</a></li>
+    <li><a href="bookings.html" class="active">My Bookings</a></li>
+    <li><button onclick="logout()" class="btn btn-outline btn-sm">Logout</button></li>
+  </ul>
+</nav>
+
+<div class="page-header">
+  <h1>My Bookings</h1>
+  <p>Track and manage your service bookings</p>
+</div>
+
+<section class="section" style="padding-top:40px;">
+  <div id="bookingsList">
+    <div class="loading"><div class="spinner"></div></div>
+  </div>
+</section>
+
+<script>
+const API = 'http://localhost:5000/api';
+const ICONS = {'AC Service':'❄️','Plumbing':'🔧','Electrician':'⚡','Cleaning':'🧹','Beauty':'💆','Other':'🏠'};
+const user = JSON.parse(localStorage.getItem('user') || 'null');
+if (!user) window.location.href = 'auth.html';
+
+// Sample bookings for demo
+const DEMO_BOOKINGS = [
+  { _id:'b1', serviceId:{ serviceName:'AC Deep Cleaning', price:699, category:'AC Service' }, date:'2025-07-20', time:'10:00 AM', address:'12, MG Road, Tiruppur', status:'Confirmed', totalAmount:699 },
+  { _id:'b2', serviceId:{ serviceName:'Full Home Cleaning', price:1999, category:'Cleaning' }, date:'2025-07-18', time:'09:00 AM', address:'12, MG Road, Tiruppur', status:'Completed', totalAmount:1999 },
+  { _id:'b3', serviceId:{ serviceName:'Tap/Faucet Repair', price:299, category:'Plumbing' }, date:'2025-07-15', time:'02:00 PM', address:'12, MG Road, Tiruppur', status:'Pending', totalAmount:299 }
+];
+
+async function loadBookings() {
+  let bookings;
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API}/bookings/${user._id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (res.ok) bookings = await res.json();
+    else throw new Error();
+  } catch { bookings = DEMO_BOOKINGS; }
+  renderBookings(bookings);
+}
+
+function renderBookings(bookings) {
+  const container = document.getElementById('bookingsList');
+  if (!bookings.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:80px 20px;">
+        <div style="font-size:3rem;margin-bottom:16px;">📋</div>
+        <h3>No bookings yet</h3>
+        <p style="color:var(--muted);margin:10px 0 20px;">Book your first service and we'll show it here</p>
+        <a href="services.html" class="btn btn-accent">Browse Services</a>
+      </div>`;
+    return;
+  }
+  container.innerHTML = `<div class="bookings-list">
+    ${bookings.map(b => `
+      <div class="booking-item">
+        <div style="font-size:2rem;">${ICONS[(b.serviceId?.category)] || '🏠'}</div>
+        <div class="booking-item-info">
+          <div class="booking-item-service">${b.serviceId?.serviceName || 'Service'}</div>
+          <div class="booking-item-details">
+            <span>📅 ${b.date}</span>
+            <span>🕐 ${b.time}</span>
+            <span>📍 ${b.address?.substring(0,30)}...</span>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div class="booking-item-price">₹${(b.totalAmount || 0).toLocaleString()}</div>
+          <div class="badge badge-${b.status.toLowerCase()}" style="margin-top:8px;">${b.status}</div>
+        </div>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+function logout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  window.location.href = '../../index.html';
+}
+
+loadBookings();
+</script>
+</body>
+</html>

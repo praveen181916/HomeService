@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Login / Register – ServeEasy</title>
+  <link rel="stylesheet" href="../styles/main.css"/>
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="brand-logo">S</div>
+      <div class="auth-title">Welcome to ServeEasy</div>
+      <div class="auth-sub">Book professional home services with ease</div>
+    </div>
+
+    <div class="tab-switch">
+      <button class="tab-btn active" onclick="switchTab('login')" id="loginTab">Login</button>
+      <button class="tab-btn" onclick="switchTab('register')" id="registerTab">Register</button>
+    </div>
+
+    <div id="alertBox"></div>
+
+    <!-- LOGIN FORM -->
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-control" id="loginEmail" placeholder="you@email.com" required/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-control" id="loginPassword" placeholder="••••••••" required/>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;" id="loginBtn">
+        Sign In
+      </button>
+      <div style="text-align:center;margin-top:16px;font-size:0.83rem;color:var(--muted);">
+        Demo Admin: admin@homeservice.com / admin123
+      </div>
+    </form>
+
+    <!-- REGISTER FORM -->
+    <form id="registerForm" style="display:none;" onsubmit="handleRegister(event)">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-control" id="regName" placeholder="John Doe" required/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-control" id="regEmail" placeholder="you@email.com" required/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input type="tel" class="form-control" id="regPhone" placeholder="9876543210" required/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-control" id="regPassword" placeholder="Min. 6 characters" required minlength="6"/>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;" id="regBtn">
+        Create Account
+      </button>
+    </form>
+
+    <div style="text-align:center;margin-top:20px;font-size:0.85rem;color:var(--muted);">
+      <a href="../../index.html" style="color:var(--accent);text-decoration:none;">← Back to Home</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:5000/api';
+
+function switchTab(tab) {
+  document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+  document.getElementById('loginTab').classList.toggle('active', tab === 'login');
+  document.getElementById('registerTab').classList.toggle('active', tab === 'register');
+  document.getElementById('alertBox').innerHTML = '';
+}
+
+function showAlert(msg, type) {
+  document.getElementById('alertBox').innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('loginBtn');
+  btn.textContent = 'Signing in...'; btn.disabled = true;
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: document.getElementById('loginEmail').value, password: document.getElementById('loginPassword').value })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data));
+      showAlert('Login successful! Redirecting...', 'success');
+      setTimeout(() => {
+        window.location.href = data.role === 'admin' ? 'admin.html' : '../../index.html';
+      }, 1000);
+    } else { showAlert(data.message, 'error'); }
+  } catch (err) { showAlert('Server offline. Using demo mode.', 'info'); }
+  btn.textContent = 'Sign In'; btn.disabled = false;
+}
+
+async function handleRegister(e) {
+  e.preventDefault();
+  const btn = document.getElementById('regBtn');
+  btn.textContent = 'Creating Account...'; btn.disabled = true;
+  try {
+    const res = await fetch(`${API}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('regName').value,
+        email: document.getElementById('regEmail').value,
+        phone: document.getElementById('regPhone').value,
+        password: document.getElementById('regPassword').value
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data));
+      showAlert('Account created! Redirecting...', 'success');
+      setTimeout(() => window.location.href = '../../index.html', 1000);
+    } else { showAlert(data.message, 'error'); }
+  } catch (err) { showAlert('Cannot connect to server. Check backend is running.', 'error'); }
+  btn.textContent = 'Create Account'; btn.disabled = false;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>ServeEasy – Home Services at Your Doorstep</title>
+  <link rel="stylesheet" href="src/styles/main.css"/>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="navbar-brand">
+    <div class="brand-logo">S</div>
+    <span class="brand-name">Serve<span>Easy</span></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html" class="active">Home</a></li>
+    <li><a href="src/pages/services.html">Services</a></li>
+    <li><a href="src/pages/bookings.html">My Bookings</a></li>
+    <li><a href="src/pages/auth.html" class="btn btn-primary" id="authBtn">Login</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">🏆 Trusted by 50,000+ Customers</div>
+    <h1>Quality Home Services <span class="highlight">At Your Doorstep</span></h1>
+    <p>Book verified professionals for AC repair, plumbing, electrical work, home cleaning, and beauty services — all in just a few taps.</p>
+    <div class="hero-cta">
+      <a href="src/pages/services.html" class="btn btn-accent btn-lg">Explore Services →</a>
+      <a href="src/pages/auth.html" class="btn btn-outline btn-lg" style="color:white;border-color:rgba(255,255,255,0.4);">Book Now</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-number">50K+</div>
+        <div class="stat-label">Happy Customers</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">500+</div>
+        <div class="stat-label">Professionals</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">30+</div>
+        <div class="stat-label">Services</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">4.8★</div>
+        <div class="stat-label">Average Rating</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="section categories">
+  <div class="section-header">
+    <span class="section-tag">Browse By Category</span>
+    <h2 class="section-title">What Can We Help You With?</h2>
+    <p class="section-sub">Choose from our wide range of professional home services</p>
+  </div>
+  <div class="categories-grid">
+    <a href="src/pages/services.html?category=AC Service" class="category-chip">
+      <span class="icon">❄️</span><span class="label">AC Service</span>
+    </a>
+    <a href="src/pages/services.html?category=Plumbing" class="category-chip">
+      <span class="icon">🔧</span><span class="label">Plumbing</span>
+    </a>
+    <a href="src/pages/services.html?category=Electrician" class="category-chip">
+      <span class="icon">⚡</span><span class="label">Electrician</span>
+    </a>
+    <a href="src/pages/services.html?category=Cleaning" class="category-chip">
+      <span class="icon">🧹</span><span class="label">Cleaning</span>
+    </a>
+    <a href="src/pages/services.html?category=Beauty" class="category-chip">
+      <span class="icon">💆</span><span class="label">Beauty</span>
+    </a>
+    <a href="src/pages/services.html" class="category-chip">
+      <span class="icon">🏠</span><span class="label">All Services</span>
+    </a>
+  </div>
+</section>
+
+<!-- FEATURED SERVICES -->
+<section class="section" style="background:var(--bg);">
+  <div class="section-header">
+    <span class="section-tag">Most Popular</span>
+    <h2 class="section-title">Top Booked Services</h2>
+    <p class="section-sub">Quality services by certified professionals</p>
+  </div>
+  <div class="services-grid" id="featuredServices">
+    <!-- Loaded via JS -->
+    <div class="service-card">
+      <div class="service-card-img">❄️</div>
+      <div class="service-card-body">
+        <span class="service-card-category">AC Service</span>
+        <div class="service-card-title">AC Deep Cleaning</div>
+        <div class="service-card-desc">Complete AC unit deep cleaning including filters, coils, and drain pipe.</div>
+        <div class="service-card-footer">
+          <span class="service-card-price">₹699</span>
+          <span class="service-card-duration">⏱ 2-3 hours</span>
+        </div>
+        <a href="src/pages/services.html" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:16px;">Book Now</a>
+      </div>
+    </div>
+    <div class="service-card">
+      <div class="service-card-img">🔧</div>
+      <div class="service-card-body">
+        <span class="service-card-category">Plumbing</span>
+        <div class="service-card-title">Tap/Faucet Repair</div>
+        <div class="service-card-desc">Fix leaking taps, faucets, and pipe joints quickly and efficiently.</div>
+        <div class="service-card-footer">
+          <span class="service-card-price">₹299</span>
+          <span class="service-card-duration">⏱ 1 hour</span>
+        </div>
+        <a href="src/pages/services.html" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:16px;">Book Now</a>
+      </div>
+    </div>
+    <div class="service-card">
+      <div class="service-card-img">🧹</div>
+      <div class="service-card-body">
+        <span class="service-card-category">Cleaning</span>
+        <div class="service-card-title">Full Home Cleaning</div>
+        <div class="service-card-desc">Complete home deep cleaning including kitchen, bathrooms, and living areas.</div>
+        <div class="service-card-footer">
+          <span class="service-card-price">₹1,999</span>
+          <span class="service-card-duration">⏱ 4-6 hours</span>
+        </div>
+        <a href="src/pages/services.html" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:16px;">Book Now</a>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:40px;">
+    <a href="src/pages/services.html" class="btn btn-outline btn-lg">View All Services</a>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section how-it-works">
+  <div class="section-header">
+    <span class="section-tag">Simple Process</span>
+    <h2 class="section-title">How It Works</h2>
+    <p class="section-sub">Get your service booked in under 2 minutes</p>
+  </div>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-icon">🔍</div>
+      <div class="step-number">Step 01</div>
+      <div class="step-title">Browse Services</div>
+      <div class="step-desc">Explore our wide range of home services and find what you need.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-icon">📅</div>
+      <div class="step-number">Step 02</div>
+      <div class="step-title">Pick Date & Time</div>
+      <div class="step-desc">Select a convenient date and time slot that works for you.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-icon">📍</div>
+      <div class="step-number">Step 03</div>
+      <div class="step-title">Enter Address</div>
+      <div class="step-desc">Provide your address and any special instructions for the professional.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-icon">✅</div>
+      <div class="step-number">Step 04</div>
+      <div class="step-title">Done!</div>
+      <div class="step-desc">A verified professional arrives at your doorstep on time.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section testimonials">
+  <div class="section-header">
+    <span class="section-tag">Customer Reviews</span>
+    <h2 class="section-title">What Our Customers Say</h2>
+    <p class="section-sub">Real experiences from real customers</p>
+  </div>
+  <div class="testimonials-grid">
+    <div class="testimonial-card">
+      <div class="stars">★★★★★</div>
+      <p class="testimonial-text">"Excellent AC cleaning service! The professional was on time, courteous, and did a thorough job. My AC is running much better now."</p>
+      <div class="testimonial-author">
+        <div class="author-avatar">P</div>
+        <div><div class="author-name">Priya Menon</div><div class="author-city">Chennai</div></div>
+      </div>
+    </div>
+    <div class="testimonial-card">
+      <div class="stars">★★★★★</div>
+      <p class="testimonial-text">"Booked a plumber for a leak. Came within 2 hours and fixed it perfectly. Very affordable and professional. Will definitely use again!"</p>
+      <div class="testimonial-author">
+        <div class="author-avatar">R</div>
+        <div><div class="author-name">Rajan Pillai</div><div class="author-city">Coimbatore</div></div>
+      </div>
+    </div>
+    <div class="testimonial-card">
+      <div class="stars">★★★★☆</div>
+      <p class="testimonial-text">"The home cleaning team was fantastic! They cleaned every corner. The app is super easy to use. Highly recommended service!"</p>
+      <div class="testimonial-author">
+        <div class="author-avatar">A</div>
+        <div><div class="author-name">Ananya Shah</div><div class="author-city">Bangalore</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2>Ready to Get Started?</h2>
+  <p>Join thousands of happy customers. Book a service today in just 2 minutes.</p>
+  <a href="src/pages/auth.html" class="btn btn-accent btn-lg">Book Your First Service</a>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <span class="brand-name">Serve<span style="color:var(--accent)">Easy</span></span>
+      <p>Professional home services at your doorstep. Trusted by 50,000+ customers across India.</p>
+    </div>
+    <div>
+      <div class="footer-heading">Services</div>
+      <ul class="footer-links">
+        <li><a href="src/pages/services.html?category=AC Service">AC Service</a></li>
+        <li><a href="src/pages/services.html?category=Plumbing">Plumbing</a></li>
+        <li><a href="src/pages/services.html?category=Electrician">Electrician</a></li>
+        <li><a href="src/pages/services.html?category=Cleaning">Cleaning</a></li>
+        <li><a href="src/pages/services.html?category=Beauty">Beauty</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-heading">Company</div>
+      <ul class="footer-links">
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Press</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-heading">Support</div>
+      <ul class="footer-links">
+        <li><a href="#">Help Center</a></li>
+        <li><a href="#">Contact Us</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 ServeEasy. All rights reserved.</span>
+    <span>Made with ❤️ for India</span>
+  </div>
+</footer>
+
+<script>
+  // Update navbar based on login state
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  if (user) {
+    document.getElementById('authBtn').textContent = 'My Account';
+    document.getElementById('authBtn').href = user.role === 'admin' ? 'src/pages/admin.html' : 'src/pages/bookings.html';
+  }
+</script>
+</body>
+</html>
